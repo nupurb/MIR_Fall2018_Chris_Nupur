@@ -1,0 +1,6 @@
+Beethoven_sonata27_Op90_Clean_Movement1-0 0 125 253 385 515 644 772
+Beethoven_sonata27_Op90_Clean_Movement1-1 0 133 257 389 522 650 774
+Beethoven_sonata27_Op90_Clean_Movement1-2 0 137 257 388 514 635 784
+Beethoven_sonata27_Op90_Clean_Movement1-3 0 113 225 325 435 545 670 773
+Beethoven_sonata27_Op90_Clean_Movement1-4 0 117 227 337 443 552 661 773
+Beethoven_sonata27_Op90_Clean_Movement1-5 0 127 234 343 452 570 650 777
