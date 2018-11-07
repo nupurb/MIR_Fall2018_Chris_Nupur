@@ -1,9 +1,10 @@
 import numpy as np
+import matplotlib.pyplot as plt
 
 
 np.set_printoptions(threshold=np.nan)
 
-def hierarchicalDTW(hierarchicalCost, endOfNextPath):
+def hierarchicalDTW(hierarchicalCost, hierarchicalDTWStartLocations, endOfNextPath):
 	'''
 	We assume we have N strips, and a bootleg MIDI M pixels long
 
@@ -24,7 +25,9 @@ def hierarchicalDTW(hierarchicalCost, endOfNextPath):
 	width = hierarchicalCost.shape[1]
 
 	WEIGHT_FOR_NEXT_COL = 1.0
-	WEIGHT_FOR_OTHER_COLS = (1.0 - WEIGHT_FOR_NEXT_COL) / (width - 1)
+	# TEMPORARY make it impossible to jump to other cols
+	#WEIGHT_FOR_OTHER_COLS = (1.0 - WEIGHT_FOR_NEXT_COL) / (width - 1)
+	WEIGHT_FOR_OTHER_COLS = -10000000000
 
 	# initialize an empty backtrace matrix
 	value = np.empty((), dtype=object)
@@ -35,10 +38,15 @@ def hierarchicalDTW(hierarchicalCost, endOfNextPath):
 	accumHierarchicalValue = np.full((height, width), -np.inf)
 
 	# initialize the first column
-	accumHierarchicalValue[:, 0] = hierarchicalValue[:, 0]
+	# TEMPORARY: only allow us to start at (0,0)
+	# accumHierarchicalValue[:, 0] = hierarchicalValue[:, 0]
+	# so fill in only the rows which have a 0 start location
+	for row in range(height):
+		if hierarchicalDTWStartLocations[row, 0] == 0:
+			print("Filling row ", row)
+			accumHierarchicalValue[row, 0] = hierarchicalValue[row, 0]
 
-
-	print("after initialization: ", accumHierarchicalValue)
+	print("after first col: ", accumHierarchicalValue[:,0])
 
 	# Consider jumps from every location (except in the last row)
 	for row in range(height - 1):
@@ -61,11 +69,14 @@ def hierarchicalDTW(hierarchicalCost, endOfNextPath):
 						hierarchicalBacktrace[jumpRow, jumpCol] = (row, col)
 			
 			# always consider the option to head directly upwards with 0 value added
-			if (accumHierarchicalValue[row, col] > accumHierarchicalValue[row + 1, col]):
-				accumHierarchicalValue[row + 1, col] = accumHierarchicalValue[row, col]
-				hierarchicalBacktrace[row + 1, col] = (row, col)
+			# TEMPORARY: for now ignore the option right upwards
+
+			#if (accumHierarchicalValue[row, col] > accumHierarchicalValue[row + 1, col]):
+				#accumHierarchicalValue[row + 1, col] = accumHierarchicalValue[row, col]
+				#hierarchicalBacktrace[row + 1, col] = (row, col)
 
 	return accumHierarchicalValue, hierarchicalBacktrace
+
 
 def hierarchicalBacktrace(accumHierarchicalValue, hierarchicalBacktrace):
 	height = accumHierarchicalValue.shape[0]
@@ -143,9 +154,5 @@ print(endOfNextPath)
 
 endOfNextPath = preprocessHierarchicalDTW(hierarchicalDTWStartLocations)
 
-accumCost, backtrace = hierarchicalDTW(hierarchicalCost, endOfNextPath.astype(int))
+accumCost, backtrace = hierarchicalDTW(hierarchicalCost, hierarchicalDTWStartLocations, endOfNextPath.astype(int))
 hierarchicalBacktrace(accumCost, backtrace)
-
-print(accumCost)
-print(backtrace)
-print(endOfNextPath)
