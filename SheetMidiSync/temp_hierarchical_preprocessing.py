@@ -27,7 +27,7 @@ def hierarchicalDTW(hierarchicalCost, hierarchicalDTWStartLocations, endOfNextPa
 	WEIGHT_FOR_NEXT_COL = 1.0
 	# TEMPORARY make it impossible to jump to other cols
 	#WEIGHT_FOR_OTHER_COLS = (1.0 - WEIGHT_FOR_NEXT_COL) / (width - 1)
-	WEIGHT_FOR_OTHER_COLS = -10000000000
+	WEIGHT_FOR_OTHER_COLS = -np.inf
 
 	# initialize an empty backtrace matrix
 	value = np.empty((), dtype=object)
@@ -81,6 +81,26 @@ def hierarchicalDTW(hierarchicalCost, hierarchicalDTWStartLocations, endOfNextPa
 def hierarchicalBacktrace(accumHierarchicalValue, hierarchicalBacktrace):
 	height = accumHierarchicalValue.shape[0]
 	width = accumHierarchicalValue.shape[1]
+	curBest = -np.inf
+	curRow = height - 1
+	while (curBest == -np.inf):
+		print("cur row is ", curRow)
+		curBest = accumHierarchicalValue[curRow, -1]
+		curRow = curRow - 1
+	curRow = curRow + 1
+	curCol = width - 1
+	#curRow = height - 1
+	print(curCol)
+	print(curRow)
+	print("Cur Row: ", curRow, " Cur Col: ", curCol)
+	while ((curRow, curCol) != (0, 0) and hierarchicalBacktrace[curRow, curCol] != (-1, -1)):
+		print("Cur Strip: ", curCol, " Cur Row: ", curRow, " Cur Value: ", accumHierarchicalValue[curRow, curCol], " Accum Value: ", accumHierarchicalValue[curRow, :])
+		curRow, curCol = hierarchicalBacktrace[curRow, curCol]
+	print("Cur Strip: ", curCol, " Cur Row: ", curRow, " Cur Value: ", accumHierarchicalValue[curRow, curCol], " Accum Value: ", accumHierarchicalValue[curRow, :])
+
+def oldHierarchicalBacktrace(accumHierarchicalValue, hierarchicalBacktrace):
+	height = accumHierarchicalValue.shape[0]
+	width = accumHierarchicalValue.shape[1]
 
 	curCol = np.argmax(accumHierarchicalValue[-1, :])
 	curRow = height - 1
@@ -128,8 +148,8 @@ def preprocessHierarchicalDTW(hierarchicalDTWStartLocations):
 
 	return endOfNextPath.astype(int)
 
-hierarchicalCost = np.loadtxt(open("endCostCosts.csv"), delimiter=",")
-hierarchicalDTWStartLocations = np.loadtxt(open("endCostStartLocations.csv"), delimiter=",")
+hierarchicalCost = np.loadtxt(open("mazurkaEndCostCosts.csv"), delimiter=",")
+hierarchicalDTWStartLocations = np.loadtxt(open("mazurkaEndCostStartLocations.csv"), delimiter=",")
 
 '''
 # test case
