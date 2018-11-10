@@ -98,6 +98,25 @@ def hierarchicalBacktrace(accumHierarchicalValue, hierarchicalBacktrace):
 		curRow, curCol = hierarchicalBacktrace[curRow, curCol]
 	print("Cur Strip: ", curCol, " Cur Row: ", curRow, " Cur Value: ", accumHierarchicalValue[curRow, curCol], " Accum Value: ", accumHierarchicalValue[curRow, :])
 
+def hierarchicalBacktraceNotEnd(accumHierarchicalValue, hierarchicalBacktrace):
+	height = accumHierarchicalValue.shape[0]
+	width = accumHierarchicalValue.shape[1]
+	curBest = -np.inf
+	curRow = height - 1
+	curCol = width - 1
+	while (curBest == -np.inf):
+		curBest = np.amax(accumHierarchicalValue[curRow, :])
+		curCol = np.argmax(accumHierarchicalValue[curRow, :])
+		curRow = curRow - 1
+	curRow = curRow + 1
+	#curRow = height - 1
+	print("Cur Row: ", curRow, " Cur Col: ", curCol)
+	while ((curRow, curCol) != (0, 0) and hierarchicalBacktrace[curRow, curCol] != (-1, -1)):
+		print("Cur Strip: ", curCol, " Cur Row: ", curRow, " Cur Value: ", accumHierarchicalValue[curRow, curCol], " Accum Value: ", accumHierarchicalValue[curRow, :])
+		curRow, curCol = hierarchicalBacktrace[curRow, curCol]
+	print("Cur Strip: ", curCol, " Cur Row: ", curRow, " Cur Value: ", accumHierarchicalValue[curRow, curCol], " Accum Value: ", accumHierarchicalValue[curRow, :])
+
+
 def oldHierarchicalBacktrace(accumHierarchicalValue, hierarchicalBacktrace):
 	height = accumHierarchicalValue.shape[0]
 	width = accumHierarchicalValue.shape[1]
