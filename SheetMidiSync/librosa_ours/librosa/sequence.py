@@ -374,13 +374,13 @@ def __dtw_calc_accu_cost_forward_update(C, D, D_steps, step_sizes_sigma,
                 next_col_index = cur_m + step_sizes_sigma[next_step_idx, 1]
 
                 if next_row_index < D.shape[0] and next_col_index < D.shape[1]:
-                    next_D = D[next_row_index, next_col_index]
+                    cur_D = D[cur_n, cur_m]
                     next_C = next_w_mul * C[cur_n - max_0, cur_m - max_1]
                     next_C += next_w_add
-                    next_cost = next_D + next_C
+                    next_cost = cur_D + next_C
 
                     # check if next_cost is smaller than the one stored in D
-                    if next_cost < next_D:
+                    if next_cost < D[next_row_index, next_col_index]:
                         D[next_row_index, next_col_index] = next_cost
 
                         # save step-index
