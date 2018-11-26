@@ -52,7 +52,7 @@ __all__ = ['dtw',
 
 def dtw(X=None, Y=None, C=None, metric='euclidean', step_sizes_sigma=None,
         weights_add=None, weights_mul=None, subseq=False, backtrack=True,
-        global_constraints=False, band_rad=0.25, return_steps=False):
+        global_constraints=False, band_rad=0.25, return_steps=False, forward_update=False):
     '''Dynamic time warping (DTW).
 
     This function performs a DTW and path backtracking on two sequences.
@@ -208,10 +208,16 @@ def dtw(X=None, Y=None, C=None, metric='euclidean', step_sizes_sigma=None,
     D_steps = -1 * np.ones(D.shape, dtype=np.int)
 
     # calculate accumulated cost matrix
-    D, D_steps = __dtw_calc_accu_cost(C, D, D_steps,
-                                      step_sizes_sigma,
-                                      weights_mul, weights_add,
-                                      max_0, max_1)
+    if forward_update:
+        D, D_steps = __dtw_calc_accu_cost_forward_update(C, D, D_steps,
+                                          step_sizes_sigma,
+                                          weights_mul, weights_add,
+                                          max_0, max_1)
+    else:
+        D, D_steps = __dtw_calc_accu_cost(C, D, D_steps,
+                                          step_sizes_sigma,
+                                          weights_mul, weights_add,
+                                          max_0, max_1)
 
     # delete infinity rows and columns
     D = D[max_0:, max_1:]
@@ -308,6 +314,77 @@ def __dtw_calc_accu_cost(C, D, D_steps, step_sizes_sigma,
 
                     # save step-index
                     D_steps[cur_n, cur_m] = cur_step_idx
+
+    return D, D_steps
+
+
+@jit(nopython=True)
+def __dtw_calc_accu_cost_forward_update(C, D, D_steps, step_sizes_sigma,
+                         weights_mul, weights_add, max_0, max_1):  # pragma: no cover
+    '''Calculate the accumulated cost matrix D.
+
+    Use dynamic programming to calculate the accumulated costs.
+
+    Parameters
+    ----------
+    C : np.ndarray [shape=(N, M)]
+        pre-computed cost matrix
+
+    D : np.ndarray [shape=(N, M)]
+        accumulated cost matrix
+
+    D_steps : np.ndarray [shape=(N, M)]
+        steps which were used for calculating D
+
+    step_sizes_sigma : np.ndarray [shape=[n, 2]]
+        Specifies allowed step sizes as used by the dtw.
+
+    weights_add : np.ndarray [shape=[n, ]]
+        Additive weights to penalize certain step sizes.
+
+    weights_mul : np.ndarray [shape=[n, ]]
+        Multiplicative weights to penalize certain step sizes.
+
+    max_0 : int
+        maximum number of steps in step_sizes_sigma in dim 0.
+
+    max_1 : int
+        maximum number of steps in step_sizes_sigma in dim 1.
+
+    Returns
+    -------
+    D : np.ndarray [shape=(N,M)]
+        accumulated cost matrix.
+        D[N,M] is the total alignment cost.
+        When doing subsequence DTW, D[N,:] indicates a matching function.
+
+    D_steps : np.ndarray [shape=(N,M)]
+        steps which were used for calculating D.
+
+    See Also
+    --------
+    dtw
+    '''
+    for cur_n in range(max_0, D.shape[0]):
+        for cur_m in range(max_1, D.shape[1]):
+            # accumulate costs
+            for next_step_idx, next_w_add, next_w_mul in zip(range(step_sizes_sigma.shape[0]),
+                                                          weights_add, weights_mul):
+                next_row_index = cur_n + step_sizes_sigma[next_step_idx, 0]
+                next_col_index = cur_m + step_sizes_sigma[next_step_idx, 1]
+
+                if next_row_index < D.shape[0] and next_col_index < D.shape[1]:
+                    next_D = D[next_row_index, next_col_index]
+                    next_C = next_w_mul * C[cur_n - max_0, cur_m - max_1]
+                    next_C += next_w_add
+                    next_cost = next_D + next_C
+
+                    # check if next_cost is smaller than the one stored in D
+                    if next_cost < next_D:
+                        D[next_row_index, next_col_index] = next_cost
+
+                        # save step-index
+                        D_steps[next_row_index, next_col_index] = next_step_idx
 
     return D, D_steps
 
